@@ -37,7 +37,9 @@ class Dataset(BaseDataset):
 
     # アノテーションされたスキャンデータのディレクトリを投げた時にpathを返す
     def get_path(self, dir_name):
-        init_path = '/Volumes/masashi/workspace/0_KML/0_medical/0_data/LIDC-IDRI/'
+        # wsl
+        # init_path = '/Volumes/masashi/workspace/0_KML/0_medical/0_data/LIDC-IDRI/'
+        init_path = '/mnt/c/Users/masashi/workspace/1_KML/4_medical/LIDC-IDRI/'
         path = glob.glob(init_path + dir_name + '/*')
         return path, len(path)
     

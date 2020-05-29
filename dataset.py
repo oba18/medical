@@ -79,12 +79,15 @@ class Dataset(BaseDataset):
             list_contour_slice.append(contour_slice)
         return list_contour_slice
 
+    # 目標のdicomファイルを取り出す
     def get_dicom_path(self, dir_name, contour_slice):
         all_dicom_count = len(glob.glob(dir_name + '*.dcm'))
         target_dicom_num = all_dicom_count - contour_slice # スライス面とdcmが反対から参照のためファイル総数からスライス面を引く
-        target_dicom = glob.glob(dir_name + f'*{target_dicom_num}')
-        return target_dicom
+        target_dicom = glob.glob(dir_name + '*{}*.dcm'.format(str(target_dicom_num)))[0]
+        return target_dicom_num, target_dicom
 
+    # マスク画像を取り出す
+    def get_mask(self, )
 
     def __getitem__(self, index):
         return self.data[index]
@@ -114,5 +117,6 @@ for i, ann_index in enumerate(range(1012)):
     contour_slice_list = d.get_contour_slice_list(contour)
     print (contour_slice_list)
     for contour_slice in contour_slice_list:
-        print (d.get_dicom_path(dir_name, contour_slice))
+        target_dicom_num, target_dicom = d.get_dicom_path(dir_name, contour_slice)
+        print (target_dicom_num, target_dicom)
     print ('----------------------------------')

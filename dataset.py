@@ -37,9 +37,10 @@ class Dataset(BaseDataset):
 
     # アノテーションされたスキャンデータのディレクトリを投げた時にpathを返す
     def get_path(self, dir_name):
+        # mac
+        init_path = '/Volumes/masashi/workspace/0_KML/0_medical/0_data/LIDC-IDRI/'
         # wsl
-        # init_path = '/Volumes/masashi/workspace/0_KML/0_medical/0_data/LIDC-IDRI/'
-        init_path = '/mnt/c/Users/masashi/workspace/1_KML/4_medical/LIDC-IDRI/'
+        # init_path = '/mnt/c/Users/masashi/workspace/1_KML/4_medical/LIDC-IDRI/'
         path = glob.glob(init_path + dir_name + '/*')
         return path, len(path)
     
@@ -65,19 +66,24 @@ class Dataset(BaseDataset):
         else:
             target_path = path[0] + '/**/'
             return (glob.glob(target_path))[0]
+    
+    # アノテーションされたデータのアノテーション部分を取り出す
+    def get_contour(self, annotation):
+        return pl.query(pl.Contour).filter(pl.Contour.annotation_id == annotation.id)
 
-    # ディレクトを与えた時にそのディレクトリの中のdicomファイルの数を返す
-    def get_dicom_count(self, dir_name):
-        target_dir_name = dir_name + '*.dcm'
-        return len(glob.glob(target_dir_name))
+    # アノテーションされたデータのスライス面のリストを返す
+    def get_contour_slice_list(self, contour):
+        list_contour_slice = []
+        for index in range(len(contour.all())):
+            contour_slice = contour[index].image_k_position
+            list_contour_slice.append(contour_slice)
+        return list_contour_slice
 
-    # 目的のスライスのdicomファイルを返す
-    def get_dicom(self, slice_list, len_dicom_files):
-        list_target_dicom = []
-        for a_slice in slice_list:
-            target_dicom = len_dicom_files - a_slice
-            list_target_dicom.append(target_dicom)
-        return list_target_dicom
+    def get_dicom_path(self, dir_name, contour_slice):
+        all_dicom_count = len(glob.glob(dir_name + '*.dcm'))
+        target_dicom_num = all_dicom_count - contour_slice # スライス面とdcmが反対から参照のためファイル総数からスライス面を引く
+        target_dicom = glob.glob(dir_name + f'*{target_dicom_num}')
+        return target_dicom
 
 
     def __getitem__(self, index):
@@ -90,9 +96,9 @@ d = Dataset()
 d.ann_index = 0
 scan_index = 0
 for i, ann_index in enumerate(range(1012)):
-    ann = d.get_texture(1)
-    print ('ann', ann[ann_index])
-    scan = d.get_scan(ann[ann_index])
+    ann = (d.get_texture(1))[ann_index]
+    print ('ann', ann)
+    scan = d.get_scan(ann)
     print ('scan', scan)
     patient_id = d.get_patient_id(scan[scan_index])
     print ('patient_id', patient_id)
@@ -104,7 +110,9 @@ for i, ann_index in enumerate(range(1012)):
     # print (d.get_many_file_dir(path))
     dir_name = d.get_many_file_dir(path)
     print (dir_name)
-    dicom_count = d.get_dicom_count(dir_name)
-    print (dicom_count)
-    print (d.get_dicom(slices, dicom_count))
+    contour = d.get_contour(ann)
+    contour_slice_list = d.get_contour_slice_list(contour)
+    print (contour_slice_list)
+    for contour_slice in contour_slice_list:
+        print (d.get_dicom_path(dir_name, contour_slice))
     print ('----------------------------------')

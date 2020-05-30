@@ -4,8 +4,7 @@ import numpy as np
 import glob
 import os
 import pylidc as pl
-# import pydicom
-# import dicom
+import pydicom
 
 class Dataset(BaseDataset):
     def __init__(self,):
@@ -26,51 +25,6 @@ class Dataset(BaseDataset):
 
     def get_abs_path(self, scan):
         return scan[0].get_path_to_dicom_files() + '/'
-
-    # これの返り値が参照するディレクトリの名前になる
-    def get_patient_id(self, scan):
-        return scan.patient_id
-
-    # アノテーションされたスキャンデータからアノテーションされているスライス面のスライス番号を返す
-    def get_slices(self, scan):
-        slices = [np.array([a.centroid for a in gourp]).mean(0) for gourp in scan.cluster_annotations()]
-        slice_list = []
-        for a in range(len(slices)):
-            a_slice = int(slices[a][2])
-            slice_list.append(a_slice)
-        return slice_list
-
-    # アノテーションされたスキャンデータのディレクトリを投げた時にpathを返す
-    def get_path(self, dir_name):
-        # mac
-        # init_path = '/Volumes/masashi/workspace/0_KML/0_medical/0_data/LIDC-IDRI/'
-        # wsl
-        init_path = '/mnt/c/Users/masashi/workspace/1_KML/4_medical/LIDC-IDRI/'
-        path = glob.glob(init_path + dir_name + '/*')
-        return path, len(path)
-    
-    # ディレクトリが2つ以上かどうかを判断する
-    def are_there_many(self, path):
-        if len(path) == 1:
-            return False
-        else:
-            return True
-
-    # ディレクトリが複数ある場合ファイル数の多い方のディレクトリを返す
-    def get_many_file_dir(self, path):
-        dict_target_path = {}
-        if self.are_there_many(path):
-            for tp in path:
-                target_path = tp + '/**/*'
-                len_target_path = len(glob.glob(target_path))
-                buf_dict = {target_path: len_target_path}
-                dict_target_path.update(buf_dict)
-            max_file_dir = max(dict_target_path, key=dict_target_path.get)
-            return glob.glob(max_file_dir.rstrip('/*') + '/**/')[0]
-
-        else:
-            target_path = path[0] + '/**/'
-            return (glob.glob(target_path))[0]
     
     # アノテーションされたデータのアノテーション部分を取り出す
     def get_contour(self, annotation):
@@ -91,10 +45,15 @@ class Dataset(BaseDataset):
         target_dicom = glob.glob(dir_name + '*{}*.dcm'.format(str(target_dicom_num)))[0]
         return target_dicom_num, target_dicom
 
-    # マスク画像を取り出す
-    def get_mask(dicom_path):
-        return 0
+    # dicomのCT値を取り出す
+    def get_ct_vol(self, dicom_path):
+        ds = pydicom.dcmread(dicom_path)
+        return ds.pixel_array
 
+    # マスク画像を取り出す
+    def get_mask(contour, ct_vol):
+        
+        return 0
 
     def __getitem__(self, index):
         return self.data[index]
@@ -107,10 +66,15 @@ d.ann_index = 0
 scan_index = 0
 for i, ann_index in enumerate(range(1012)):
     annotation = (d.get_texture(1))[ann_index]
+    # print (annotation)
     scan = d.get_scan(annotation)
+    # print (scan)
     dir_name = d.get_abs_path(scan)
+    # print (dir_name)
     contour_slice_list = d.get_contour_slice_list(d.get_contour(annotation))
+    print (d.get_contour(annotation).all())
+    # print (contour_slice_list)
     for contour_slice in contour_slice_list:
         target_dicom_num, target_dicom = d.get_dicom_path(dir_name, contour_slice)
-        # print (target_dicom_num, target_dicom)
-        print (target_dicom)
+        print (target_dicom_num, target_dicom)
+        # print (d.get_ct_vol(target_dicom))

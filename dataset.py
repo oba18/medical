@@ -51,9 +51,8 @@ class Dataset(BaseDataset):
         return ds.pixel_array
 
     # マスク画像を取り出す
-    def get_mask(contour, ct_vol):
-        
-        return 0
+    def get_mask(self, contour, index):
+        return contour[index].to_matrix()
 
     def __getitem__(self, index):
         return self.data[index]
@@ -72,9 +71,14 @@ for i, ann_index in enumerate(range(1012)):
     dir_name = d.get_abs_path(scan)
     # print (dir_name)
     contour_slice_list = d.get_contour_slice_list(d.get_contour(annotation))
-    print (d.get_contour(annotation).all())
+    contour = d.get_contour(annotation).all()
+    print (contour)
     # print (contour_slice_list)
     for contour_slice in contour_slice_list:
+        print (contour_slice, type(contour_slice))
         target_dicom_num, target_dicom = d.get_dicom_path(dir_name, contour_slice)
         print (target_dicom_num, target_dicom)
         # print (d.get_ct_vol(target_dicom))
+        for index in range(len(contour)):
+            print (d.get_mask(contour, index))
+

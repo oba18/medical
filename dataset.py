@@ -50,9 +50,16 @@ class Dataset(BaseDataset):
         ds = pydicom.dcmread(dicom_path)
         return ds.pixel_array
 
-    # マスク画像を取り出す
-    def get_mask(self, contour, index):
-        return contour[index].to_matrix()
+    # アノテーションされている部分がある座標を取り出す 
+    def get_mask_matrix(self, contour):
+        return contour.to_matrix(False)
+
+    def get_mask_xy(self, mask_matrix, index):
+        return mask_matrix[index][0], mask_matrix[index][1]
+
+    def to_mask(mask_x, mask_y, ct_vol):
+        ct_vol[y][x] = 0
+        return ct_vol
 
     def __getitem__(self, index):
         return self.data[index]
@@ -60,25 +67,36 @@ class Dataset(BaseDataset):
     def __len__(self):
         return len(self.data)
 
-d = Dataset()
-d.ann_index = 0
-scan_index = 0
-for i, ann_index in enumerate(range(1012)):
-    annotation = (d.get_texture(1))[ann_index]
-    # print (annotation)
-    scan = d.get_scan(annotation)
-    # print (scan)
-    dir_name = d.get_abs_path(scan)
-    # print (dir_name)
-    contour_slice_list = d.get_contour_slice_list(d.get_contour(annotation))
-    contour = d.get_contour(annotation).all()
-    print (contour)
-    # print (contour_slice_list)
-    for contour_slice in contour_slice_list:
-        print (contour_slice, type(contour_slice))
-        target_dicom_num, target_dicom = d.get_dicom_path(dir_name, contour_slice)
-        print (target_dicom_num, target_dicom)
-        # print (d.get_ct_vol(target_dicom))
-        for index in range(len(contour)):
-            print (d.get_mask(contour, index))
+    def excute(self):
+        ann_index = 0
+        for i, ann_index in enumerate(range(1012)):
+            annotation = (d.get_texture(1))[ann_index]
+            # print (annotation)
+            scan = d.get_scan(annotation)
+            # print (scan)
+            dir_name = d.get_abs_path(scan)
+            # print (dir_name)
+            contour_slice_list = d.get_contour_slice_list(d.get_contour(annotation))
+            contour = d.get_contour(annotation).all()
+            # print (contour)
+            # print (contour_slice_list)
 
+            # アノテーションされていないデータを取り出す
+            for contour_slice in contour_slice_list:
+                # print (contour_slice, type(contour_slice))
+                target_dicom_num, target_dicom = d.get_dicom_path(dir_name, contour_slice)
+                # print (target_dicom_num, target_dicom)
+                ct_vol = d.get_ct_vol(target_dicom)
+                print (ct_vol)
+
+            # アノテーションされた部分を取り出す
+            for c in contour:
+                mask_matrix = d.get_mask_matrix(c)
+                # print ('mask_matrix:', mask_matrix)
+                for i in range(len(mask_matrix)):
+                    x, y = d.get_mask_xy(mask_matrix, i)
+                    print ('x:', x, 'y:', y)
+
+
+d = Dataset()
+d.excute()

@@ -65,7 +65,7 @@ class Dataset(BaseDataset):
 
     def to_mask(self, ct_vol, contour_matrix):
         mask = np.zeros(ct_vol.shape, dtype=np.int32)
-        cv2.fillConvexPoly(mask, points=contour_matrix, color=(1))
+        cv2.fillConvexPoly(mask, points=contour_matrix[:,::-1], color=(1))
         return mask
 
     def __getitem__(self, index):

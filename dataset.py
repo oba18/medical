@@ -80,7 +80,6 @@ class Dataset(BaseDataset):
     # 実行
     def excute(self):
         ann_index = 0
-        i = 1012 # 1012
         img_list = []
         mask_list = []
         for ann_index in range(len(self.get_texture(1))):
@@ -89,7 +88,6 @@ class Dataset(BaseDataset):
             dir_name = self.get_abs_path(scan)
             contour_slice_list, contour_matrix_list = self.get_contour_slice_list(self.get_contour(annotation))
             contour = self.get_contour(annotation)
-
             for contour_slice, contour_matrix in zip(contour_slice_list, contour_matrix_list):
                 target_dicom_num, target_dicom = self.get_dicom_path(dir_name, contour_slice)
                 ct_vol = self.get_ct_vol(target_dicom)

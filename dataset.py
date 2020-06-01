@@ -75,7 +75,7 @@ class Dataset(BaseDataset):
                 }
     
     def __len__(self):
-        return len(self.data)
+        return len(self.img_list)
 
     # 実行
     def excute(self):

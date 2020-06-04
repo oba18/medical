@@ -7,6 +7,7 @@ import pylidc as pl
 import pydicom
 import cv2
 from sklearn.utils import shuffle
+import dataloader.custom_transfer as tr
 
 class Dataset(BaseDataset):
     def __init__(self, split='train'):
@@ -21,6 +22,7 @@ class Dataset(BaseDataset):
             self.img_list, self.mask_list = img_list[train_len:train_len + val_len], mask_list[train_len:train_len + val_len]
         elif split == 'test':
             self.img_list, self.mask_list = img_list[train_len + val_len:], mask_list[train_len + val_len:]
+        self.split = split
 
 
     # 任意のtextureの値のあるアノテーションデータを全て取り出す
@@ -69,10 +71,17 @@ class Dataset(BaseDataset):
         return mask
 
     def __getitem__(self, index):
-        return {
-                'img': self.img_list[index],
-                'mask': self.mask_list[index]
+        sample =  {
+                'input': self.img_list[index],
+                'label': self.mask_list[index]
                 }
+        if self.split == 'train':
+            return self.transform_tr(sample)
+        if self.split == 'val':
+            return self.transform_val(sample)
+        if self.split == 'test':
+            return self.transform_val(sample)
+        return sample
     
     def __len__(self):
         return len(self.img_list)
@@ -97,6 +106,20 @@ class Dataset(BaseDataset):
         return img_list, mask_list
                 
 
-d = Dataset()
-# test
-print (d[0])
+    def transform_tr(self, sample):
+        composed_transforms = transforms.Compose([
+            # tr.Resize(size=(64, 64)),
+            tr.Normalize(mean=0, std=1),
+            tr.ToTensor()
+            ])
+        return composed_transforms(sample)
+
+    def transform_val(self, sample):
+        composed_transforms = transforms.Compose([
+            # tr.Resize(size=(64, 64)),
+            tr.Normalize(mean=0, std=1),
+            tr.ToTensor()
+            ])
+        return composed_transforms(sample)
+
+

@@ -69,7 +69,11 @@ class ToTensor(object):
         img = np.array(sample["input"])
         target = np.array(sample["label"])
         
-        img = img.astype(np.float32).transpose((2, 0, 1))
+        img = img.reshape(img.shape + (1, ))
+        rgb_img = np.append(img, img, axis=2)
+        rgb_img = np.append(rgb_img, img, axis=2)
+        # print (rgb_img.shape)
+        img = rgb_img.astype(np.float32).transpose((2, 0, 1))
         
         img = torch.from_numpy(img).float()
         target = torch.from_numpy(target).long()

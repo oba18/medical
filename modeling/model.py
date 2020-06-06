@@ -5,9 +5,9 @@ import torch.nn.functional as F
 import segmentation_models_pytorch as smp
 
 class Modeling(nn.Module):
-    def __init__():
+    def __init__(self, num_class):
         super(Modeling, self).__init__()
-        self.unet = smp.Unet('resneet34', encoder_weight='imagenet')
+        self.unet = smp.Unet('resnet34', encoder_weights='imagenet',  classes=num_class)
 
     def forward(self, x):
         x = self.unet(x)

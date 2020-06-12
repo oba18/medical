@@ -14,7 +14,7 @@ from utils.saver import Saver
 from utils.summaries import TensorboardSummary
 from utils.metrics import Evaluator
 from utils.optimizer import Optimizer
-from utils.loss import SegmentationLosses
+from utils.loss import SegmentationLosses, BCEDiceLoss
 from dataloader.dataset import Dataset
 from dataloader import *
 from modeling.model import Modeling
@@ -25,7 +25,7 @@ optuna.logging.disable_default_handler()
 
 class Trainer(object):
     def __init__(self, batch_size=32, optimizer_name="Adam", lr=1e-3, weight_decay=1e-5,
-                 epochs=200, model_name="model01", gpu_ids=None, resume=None, tqdm=None):
+                 epochs=200, model_name="model01", gpu_ids=None, resume=None, tqdm=None, is_develop=False):
         """
         args:
             batch_size = (int) batch_size of training and validation
@@ -79,7 +79,7 @@ class Trainer(object):
         Loss: You have to define Loss function. / <utils.loss.Loss()>
         """
         ## ***Define Dataloader***
-        self.train_loader, self.val_loader, self.test_loader, self.num_classes = make_data_loader(batch_size)
+        self.train_loader, self.val_loader, self.test_loader, self.num_classes = make_data_loader(batch_size, is_develop=is_develop)
         print ('ready dataloader')
         
         ## ***Define Your Model***
@@ -95,7 +95,8 @@ class Trainer(object):
         print ('ready optimizer')
         
         ## ***Define Loss***
-        self.criterion = SegmentationLosses().build_loss()
+        # self.criterion = SegmentationLosses().build_loss()
+        self.criterion = BCEDiceLoss()
         print ('ready criterion')
         # ------------------------- #
         # Some settings
@@ -255,6 +256,7 @@ def main():
     ## ***checking point***
     parser.add_argument('--resume_path', type=str, default=None, help='put the path to resuming file if you need')
     parser.add_argument('--fine_tuning', action='store_true', default=False, help='finetuning on a different dataset')
+    parser.add_argument('--is_develop', action='store_true', default=False, help='turn on develop mode')
     
     args = parser.parse_args()
     
@@ -278,7 +280,7 @@ def main():
     # ------------------------- #
     # Start Learning
     trainer = Trainer(batch_size=args.batch_size, optimizer_name=args.optimizer_name, lr=args.epochs, weight_decay=args.weight_decay, 
-                      epochs=args.epochs, model_name=args.model_name, gpu_ids=gpu_ids, resume=resume, tqdm=tqdm)
+                      epochs=args.epochs, model_name=args.model_name, gpu_ids=gpu_ids, resume=resume, tqdm=tqdm, is_develop=args.is_develop)
     
     print('Starting Epoch:', trainer.start_epoch)
     print('Total Epoches:', trainer.epochs)

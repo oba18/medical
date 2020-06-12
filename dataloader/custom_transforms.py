@@ -41,7 +41,7 @@ class Normalize(object):
         mean (tuple): means for each channel.
         std (tuple): standard deviations for each channel.
     """
-    def __init__(self, mean=0, std=1):
+    def __init__(self, mean=-580.0195, std=453.7174):
         self.mean = mean
         self.std = std
 
@@ -49,15 +49,38 @@ class Normalize(object):
         img = sample["input"]
         target = sample["label"]
         
-        img = np.array(img).astype(np.float32)
-        # img /= 255.0
+        img = img.astype(np.float32)
         img -= self.mean
         img /= self.std
 
         return {"input": img,
                 "label": target}
-
     
+
+class PaddingSurround(object):
+    def __call__(self, sample):
+        img = sample["input"]
+        target = sample["label"]
+        global_min = img.min()
+        local_min = img[img>global_min].min()
+        img[img == global_min] = local_min
+
+        return {"input": img,
+                "label": target}
+
+class UpperThreshold(object):
+    def __init__(self, threshold):
+        self.threshold = threshold
+
+    def __call__(self, sample):
+        img = sample["input"]
+        target = sample["label"]
+
+        img[img>self.threshold] = self.threshold
+
+        return {"input": img,
+                "label": target}
+
 class ToTensor(object):
     """
     Convert ndarrays in sample to Tensors.

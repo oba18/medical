@@ -46,7 +46,9 @@ class Dataset(BaseDataset):
     def transform_tr(self, sample):
         composed_transforms = transforms.Compose([
             # tr.Resize(size=(64, 64)),
-            tr.Normalize(mean=0, std=1),
+            tr.PaddingSurround(),
+            tr.UpperThreshold(0),
+            # tr.Normalize(mean=0, std=1),
             tr.ToTensor()
             ])
         return composed_transforms(sample)

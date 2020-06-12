@@ -7,7 +7,9 @@ import cv2
 from tqdm import tqdm 
 
 class Lidc():
-    def __init__(self):
+    def __init__(self, is_develop):
+        self.is_develop = is_develop
+        # self.excute()
         self.img_list, self.mask_list = self.excute()
 
     def get_texture(self, texture_val):
@@ -24,6 +26,32 @@ class Lidc():
     # スキャンデータに対するdicomのパスを取り出す
     def get_abs_path(self, scan):
         return scan[0].get_path_to_dicom_files() + '/'
+
+    # HUを返す
+    def get_pixels_hu(self, scan):
+        a_slice = pydicom.dcmread(scan)
+
+        # Convert to int16 (from sometimes int16), 
+        # should be possible as values should always be low enough (<32k)
+        # image = image.astype(np.int16)
+
+        # Set outside-of-scan pixels to 1
+        # The intercept is usually -1024, so air is approximately 0
+        #image[image == -2000] = 0
+
+        # Convert to Hounsfield units (HU)
+        intercept = a_slice.RescaleIntercept
+        slope = a_slice.RescaleSlope
+        a_slice = a_slice.pixel_array.astype(np.int16)
+
+
+
+        if slope != 1:
+            a_slice = slope * a_slice.astype(np.float64)
+            a_slice = a_slice.astype(np.int16)
+        a_slice += np.int16(intercept)
+
+        return np.array(a_slice, dtype=np.int16)
 
     # アノテーションされたデータのスライス面のリストを返す
     def get_contour_slice_list(self, contour):
@@ -49,6 +77,7 @@ class Lidc():
         ds = pydicom.dcmread(dicom_path)
         return ds.pixel_array
 
+    # マスク画像の生成
     def to_mask(self, ct_vol, contour_matrix):
         mask = np.zeros(ct_vol.shape, dtype=np.int32)
         cv2.fillConvexPoly(mask, points=contour_matrix[:,::-1], color=(1))
@@ -58,7 +87,8 @@ class Lidc():
         ann_index = 0
         img_list = []
         mask_list = []
-        for ann_index in tqdm(range(len(self.get_texture(1)))):
+        annotation_size = len(self.get_texture(1)) if self.is_develop == False else 10
+        for ann_index in tqdm(range(annotation_size)):
         # for debug
         # for ann_index in tqdm(range(10)):
             annotation = (self.get_texture(1))[ann_index]
@@ -68,10 +98,11 @@ class Lidc():
             contour = self.get_contour(annotation)
             for contour_slice, contour_matrix in zip(contour_slice_list, contour_matrix_list):
                 target_dicom_num, target_dicom = self.get_dicom_path(dir_name, contour_slice)
-                ct_vol = self.get_ct_vol(target_dicom)
-                mask = self.to_mask(ct_vol, contour_matrix)
-                img_list.append(ct_vol) 
+                # ct_vol = self.get_ct_vol(target_dicom)
+                hu = self.get_pixels_hu(target_dicom)
+                # mask = self.to_mask(ct_vol, contour_matrix)
+                mask = self.to_mask(hu, contour_matrix)
+                # img_list.append(ct_vol) 
+                img_list.append(hu) 
                 mask_list.append(mask)
-        return img_list, mask_list
-
-
+        return np.array(img_list), np.array(mask_list)

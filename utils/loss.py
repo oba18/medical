@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class SegmentationLosses(object):
     def __init__(self, weight=None, size_average=True, batch_average=True, ignore_index=255, cuda=False):
@@ -47,6 +48,32 @@ class SegmentationLosses(object):
         if self.batch_average:
             loss /= n
         return loss
+
+class BCEDiceLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+    def onehot(self, image_tensor, n_clsses):
+        h, w = image_tensor.size()
+        onehot = torch.LongTensor(n_classes, h, w).zero_()
+        image_tensor = image_tensor.unsqueeze_(0)
+        onehot = onehot.scatter_(0, image_tensor, 1)
+        return onehot
+
+    def forward(self, input, target):
+        target = target.type_as(input)
+        target_shape = target.shape
+        target = target.reshape((target.shape[0], 1, *target_shape[1:]))
+        bce = F.binary_cross_entropy_with_logits(input, target)
+        smooth = 1e-5
+        input = torch.sigmoid(input)
+        num = target.size(0)
+        input = input.view(num, -1)
+        target = target.view(num, -1)
+        intersection = (input * target)
+        dice = (2. * intersection.sum(1) + smooth) / (input.sum(1) + target.sum(1) + smooth)
+        dice = 1 - dice.sum() / num
+        return 0.5 * bce + dice
 
 if __name__ == "__main__":
     loss = SegmentationLosses(cuda=True)

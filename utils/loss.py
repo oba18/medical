@@ -75,6 +75,7 @@ class BCEDiceLoss(nn.Module):
         dice = 1 - dice.sum() / num
         return 0.5 * bce + dice
 
+
 if __name__ == "__main__":
     loss = SegmentationLosses(cuda=True)
     a = torch.rand(1, 3, 7, 7).cuda()

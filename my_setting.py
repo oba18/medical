@@ -2,7 +2,7 @@ class MyPath(object):
     # general setting
     output_dir = "./run/"
     
-    num_class = 1
+    num_class = 2
     
 class pycolor:
     RED = '\033[31m'

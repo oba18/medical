@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import optuna
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 # Project Modules
 from utils.saver import Saver
@@ -59,12 +60,10 @@ class Trainer(object):
         ## ***Define Saver***
         self.saver = Saver(model_name, lr, epochs)
         self.saver.save_experiment_config()
-        print ('ready saver')
         
         ## ***Define Tensorboard Summary***
         self.summary = TensorboardSummary(self.saver.experiment_dir)
         self.writer = self.summary.create_summary()
-        print ('ready tensorborad')
 
         # ------------------------- #
         # Define Training components. (You have to Change!)
@@ -80,24 +79,20 @@ class Trainer(object):
         """
         ## ***Define Dataloader***
         self.train_loader, self.val_loader, self.test_loader, self.num_classes = make_data_loader(batch_size, is_develop=is_develop)
-        print ('ready dataloader')
         
         ## ***Define Your Model***
         self.model = Modeling(self.num_classes)
-        print ('ready model')
         
         ## ***Define Evaluator***
         self.evaluator = Evaluator(self.num_classes)
-        print ('ready evaluator')
         
         ## ***Define Optimizer***
         self.optimizer = Optimizer(self.model.parameters(), optimizer_name=optimizer_name, lr=lr, weight_decay=weight_decay)
-        print ('ready optimizer')
         
         ## ***Define Loss***
-        # self.criterion = SegmentationLosses().build_loss()
-        self.criterion = BCEDiceLoss()
-        print ('ready criterion')
+        self.criterion = SegmentationLosses(weight=torch.tensor([1.0, 1594.0]).cuda()).build_loss('ce')
+        # self.criterion = SegmentationLosses().build_loss('focal')
+        # self.criterion = BCEDiceLoss()
         # ------------------------- #
         # Some settings
         """
@@ -279,7 +274,7 @@ def main():
     
     # ------------------------- #
     # Start Learning
-    trainer = Trainer(batch_size=args.batch_size, optimizer_name=args.optimizer_name, lr=args.epochs, weight_decay=args.weight_decay, 
+    trainer = Trainer(batch_size=args.batch_size, optimizer_name=args.optimizer_name, lr=args.lr, weight_decay=args.weight_decay, 
                       epochs=args.epochs, model_name=args.model_name, gpu_ids=gpu_ids, resume=resume, tqdm=tqdm, is_develop=args.is_develop)
     
     print('Starting Epoch:', trainer.start_epoch)

@@ -50,8 +50,8 @@ class Normalize(object):
         target = sample["label"]
         
         img = img.astype(np.float32)
-        img -= self.mean
-        img /= self.std
+        img -= self.mean # 平均0
+        img /= self.std # 分散1
 
         return {"input": img,
                 "label": target}
@@ -61,9 +61,15 @@ class PaddingSurround(object):
     def __call__(self, sample):
         img = sample["input"]
         target = sample["label"]
-        global_min = img.min()
-        local_min = img[img>global_min].min()
-        img[img == global_min] = local_min
+        # 背景のCT値を肺のある部分の最小のCT値に合わせる
+        # global_min = img.min()
+        # local_min = img[img>global_min].min()
+        # img[img == global_min] = local_min
+
+        # 背景のCT値を-1000空気に合わせる
+        # img[img<-1000] = -1000
+
+        img[img<-1000] = 0
 
         return {"input": img,
                 "label": target}

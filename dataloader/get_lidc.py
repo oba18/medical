@@ -31,20 +31,10 @@ class Lidc():
     def get_pixels_hu(self, scan):
         a_slice = pydicom.dcmread(scan)
 
-        # Convert to int16 (from sometimes int16), 
-        # should be possible as values should always be low enough (<32k)
-        # image = image.astype(np.int16)
-
-        # Set outside-of-scan pixels to 1
-        # The intercept is usually -1024, so air is approximately 0
-        #image[image == -2000] = 0
-
         # Convert to Hounsfield units (HU)
         intercept = a_slice.RescaleIntercept
         slope = a_slice.RescaleSlope
         a_slice = a_slice.pixel_array.astype(np.int16)
-
-
 
         if slope != 1:
             a_slice = slope * a_slice.astype(np.float64)
@@ -87,6 +77,7 @@ class Lidc():
         ann_index = 0
         img_list = []
         mask_list = []
+        # target_dicom_list = []
         annotation_size = len(self.get_texture(1)) if self.is_develop == False else 10
         for ann_index in tqdm(range(annotation_size)):
         # for debug
@@ -105,4 +96,5 @@ class Lidc():
                 # img_list.append(ct_vol) 
                 img_list.append(hu) 
                 mask_list.append(mask)
+                # target_dicom.append(dir_name)
         return np.array(img_list), np.array(mask_list)

@@ -18,7 +18,6 @@ def make_data_loader(batch_size=16, is_develop=False):
     num_class = train_set.NUM_CLASSES
     
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-    print (train_loader)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
     

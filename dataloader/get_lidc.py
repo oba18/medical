@@ -77,11 +77,8 @@ class Lidc():
         ann_index = 0
         img_list = []
         mask_list = []
-        # target_dicom_list = []
         annotation_size = len(self.get_texture(1)) if self.is_develop == False else 10
         for ann_index in tqdm(range(annotation_size)):
-        # for debug
-        # for ann_index in tqdm(range(10)):
             annotation = (self.get_texture(1))[ann_index]
             scan = self.get_scan(annotation)
             dir_name = self.get_abs_path(scan)

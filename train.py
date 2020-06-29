@@ -19,6 +19,7 @@ from utils.loss import SegmentationLosses, BCEDiceLoss
 from dataloader.dataset import Dataset
 from dataloader import *
 from modeling.model import Modeling
+#  from modeling.unetpp.unet_parts import BCEDiceLoss
 from my_setting import pycolor
 
 # set disable log of optuna
@@ -47,7 +48,6 @@ class Trainer(object):
         self.use_cuda = (gpu_ids is not None) and torch.cuda.is_available
         self.tqdm = tqdm
         self.use_tqdm = tqdm is not None
-        # ------------------------- #
         # Define Utils. (No need to Change.)
         """
         These are Project Modules.
@@ -90,9 +90,9 @@ class Trainer(object):
         self.optimizer = Optimizer(self.model.parameters(), optimizer_name=optimizer_name, lr=lr, weight_decay=weight_decay)
         
         ## ***Define Loss***
-        self.criterion = SegmentationLosses(weight=torch.tensor([1.0, 1594.0]).cuda()).build_loss('ce')
+        #  self.criterion = SegmentationLosses(weight=torch.tensor([1.0, 1594.0]).cuda()).build_loss('ce')
         # self.criterion = SegmentationLosses().build_loss('focal')
-        # self.criterion = BCEDiceLoss()
+        self.criterion = BCEDiceLoss()
         # ------------------------- #
         # Some settings
         """

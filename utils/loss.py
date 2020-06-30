@@ -24,7 +24,7 @@ class SegmentationLosses(object):
         criterion = nn.CrossEntropyLoss(weight=self.weight, ignore_index=self.ignore_index, size_average=self.size_average)
         if self.cuda:
             criterion = criterion.cuda()
-
+        
         loss = criterion(logit, target.long())
 
         if self.batch_average:

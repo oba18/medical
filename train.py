@@ -90,9 +90,9 @@ class Trainer(object):
         self.optimizer = Optimizer(self.model.parameters(), optimizer_name=optimizer_name, lr=lr, weight_decay=weight_decay)
         
         ## ***Define Loss***
-        #  self.criterion = SegmentationLosses(weight=torch.tensor([1.0, 1594.0]).cuda()).build_loss('ce')
+        self.criterion = SegmentationLosses(weight=torch.tensor([1.0, 1594.0]).cuda()).build_loss('ce')
         # self.criterion = SegmentationLosses().build_loss('focal')
-        self.criterion = BCEDiceLoss()
+        #  self.criterion = BCEDiceLoss()
         # ------------------------- #
         # Some settings
         """
